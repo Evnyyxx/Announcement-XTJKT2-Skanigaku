@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portal Resmi X TJKT 2</title>
 
-    <!-- Favicon -->
+  <!-- Favicon -->
   <link rel="shortcut icon" href="https://ugc.production.linktr.ee/rKBtwVkTQi2J7zHwrW7E_I984EdNt7zl56Sd0?io=true&size=avatar-v3_0" type="image/x-icon">
-  
+
   <!-- Tailwind CSS & Supabase JS SDK via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -18,17 +18,13 @@
   <header class="bg-indigo-600/90 backdrop-blur-md text-white p-6 shadow-md border-b border-indigo-500/30">
     <div class="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
-        <logo class="mb-2">
-          <img src="https://smk3kudus.sch.id/wp-content/uploads/2025/09/smkn3kudus.png" alt="Logo SMKN 3 Kudus" class="w-16 h-16 object-contain rounded-full border border-white/30 shadow-md"> 
-          <style>
-            .logo {
-              display: inline-block;
-              vertical-align: middle;
-              margin-right: 0.2rem;
-            }   
-            </style>
-        <h1 class="text-2x1 font-bold">SMKN 3 KUDUS</h1>
-        <h1 class="text-2xl font-bold">X TJKT 2 - Portal Resmi</h1>
+        <div class="logo mb-2 flex items-center gap-3">
+          <img src="https://smk3kudus.sch.id/wp-content/uploads/2025/09/smkn3kudus.png" alt="Logo SMKN 3 Kudus" class="w-14 h-14 object-contain rounded-full border border-white/30 shadow-md"> 
+          <div>
+            <h2 class="text-sm font-bold tracking-wider text-indigo-200">SMKN 3 KUDUS</h2>
+            <h1 class="text-2xl font-bold">X TJKT 2 - Portal Resmi</h1>
+          </div>
+        </div>
         <p class="text-indigo-100 text-sm">Teknik Jaringan Komputer & Telekomunikasi 2</p>
         <p class="text-xs text-indigo-200 mt-1 font-medium flex items-center gap-1">
           👨‍🏫 Wali Kelas: <span class="text-yellow-300 font-bold">Aris Setyabudi, S.Pd.</span>
@@ -39,7 +35,7 @@
         <div class="bg-indigo-950/80 px-3 py-1.5 rounded-lg text-xs font-mono text-indigo-50 shadow-inner border border-indigo-500/30">
           <span id="live-clock" class="font-bold text-yellow-300"></span> | <span id="live-date"></span>
         </div>
-        <button onclick="promptAdminPassword()" class="bg-indigo-800/90 hover:bg-indigo-900 text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1 border border-indigo-500/30">
+        <button id="admin-mode-btn" onclick="toggleAdminMode()" class="bg-indigo-800/90 hover:bg-indigo-900 text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1 border border-indigo-500/30">
           🔒 Mode Admin
         </button>
       </div>
@@ -121,7 +117,12 @@
         <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
           📢 Papan Pengumuman
         </h2>
-        <span id="loading-indicator" class="text-xs text-indigo-600 animate-pulse hidden">Memuat data...</span>
+        <div class="flex items-center gap-2">
+          <span id="loading-indicator" class="text-xs text-indigo-600 animate-pulse hidden">Memuat data...</span>
+          <button id="add-announcement-btn" onclick="openAdminModal()" class="hidden px-3 py-1 text-xs font-bold rounded-md bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1">
+            ➕ Tambah Pengumuman
+          </button>
+        </div>
       </div>
       <div id="announcement-list" class="space-y-4">
         <!-- Announcements will be rendered here -->
@@ -287,7 +288,7 @@
   <div id="password-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-xl max-w-sm w-full p-6 shadow-lg">
       <h3 class="text-lg font-bold mb-2 text-gray-900">Masuk Mode Admin</h3>
-      <p class="text-xs text-gray-500 mb-4">Masukkan kata sandi admin untuk membuat pengumuman baru.</p>
+      <p class="text-xs text-gray-500 mb-4">Masukkan kata sandi admin untuk mengelola pengumuman.</p>
       <form onsubmit="verifyPassword(event)" class="space-y-4">
         <div>
           <input type="password" id="admin-password-input" placeholder="Masukkan kata sandi..." required class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -339,7 +340,7 @@
 
   <script>
     // ===== KREDENSIAL SUPABASE =====
-const SUPABASE_URL = "https://ninivwclnteokjeihevv.supabase.co";
+    const SUPABASE_URL = "https://ninivwclnteokjeihevv.supabase.co";
     const SUPABASE_KEY = "sb_publishable_w_Z5Qk_6ffCwtmYOQJSnTw_HwbNvGho";
     const ADMIN_PASSWORD = "XTJKT2SKANIGAKUadmin";
 
@@ -347,23 +348,12 @@ const SUPABASE_URL = "https://ninivwclnteokjeihevv.supabase.co";
 
     let currentWeek = 'B';
     let isAutoMode = true;
+    let isAdminLoggedIn = false;
 
     // DATA JADWAL SERAGAM SEKOLAH
     const seragamData = {
-      A: {
-        1: "Seragam OSIS",
-        2: "Seragam OSIS",
-        3: "PDH Biru",
-        4: "PDH Biru",
-        5: "Seragam Pramuka"
-      },
-      B: {
-        1: "Seragam OSIS",
-        2: "Baju Hitam & Celana Training",
-        3: "PDH Biru",
-        4: "Baju Hitam & Celana Training",
-        5: "Seragam Pramuka"
-      }
+      A: { 1: "Seragam OSIS", 2: "Seragam OSIS", 3: "PDH Biru", 4: "PDH Biru", 5: "Seragam Pramuka" },
+      B: { 1: "Seragam OSIS", 2: "Baju Hitam & Celana Training", 3: "PDH Biru", 4: "Baju Hitam & Celana Training", 5: "Seragam Pramuka" }
     };
 
     // DATA JADWAL PIKET KEBERSIHAN
@@ -590,11 +580,23 @@ const SUPABASE_URL = "https://ninivwclnteokjeihevv.supabase.co";
           `;
         }
 
+        let deleteBtnHTML = '';
+        if (isAdminLoggedIn) {
+          deleteBtnHTML = `
+            <button onclick="deleteAnnouncement('${item.id}')" class="text-xs text-red-600 hover:text-red-800 font-bold bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition border border-red-200">
+              🗑️ Hapus
+            </button>
+          `;
+        }
+
         return `
           <div class="p-4 rounded-lg border border-gray-200 bg-white shadow-sm">
             <div class="flex justify-between items-start mb-2">
               <span class="text-xs px-2 py-0.5 rounded font-medium ${badgeColor}">${item.category}</span>
-              <span class="text-xs text-gray-400 font-medium">📅 ${dateFormatted}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-400 font-medium">📅 ${dateFormatted}</span>
+                ${deleteBtnHTML}
+              </div>
             </div>
             <h3 class="font-bold text-gray-800 text-base">${item.title}</h3>
             <p class="text-sm text-gray-600 mt-1 whitespace-pre-line">${item.content}</p>
@@ -604,7 +606,37 @@ const SUPABASE_URL = "https://ninivwclnteokjeihevv.supabase.co";
       }).join('');
     }
 
-    // ===== ADMIN MODAL HANDLERS =====
+    // ===== FUNGSI HAPUS PENGUMUMAN =====
+    async function deleteAnnouncement(id) {
+      if (!confirm("Apakah Anda yakin ingin menghapus pengumuman ini?")) return;
+
+      const { error } = await supabaseClient
+        .from('announcements')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert("Gagal menghapus pengumuman: " + error.message);
+        console.error(error);
+      } else {
+        alert("Pengumuman berhasil dihapus!");
+        fetchAnnouncements();
+      }
+    }
+
+    // ===== ADMIN MODE HANDLERS =====
+    function toggleAdminMode() {
+      if (isAdminLoggedIn) {
+        isAdminLoggedIn = false;
+        document.getElementById('admin-mode-btn').innerText = "🔒 Mode Admin";
+        document.getElementById('admin-mode-btn').className = "bg-indigo-800/90 hover:bg-indigo-900 text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1 border border-indigo-500/30";
+        document.getElementById('add-announcement-btn').classList.add('hidden');
+        fetchAnnouncements();
+      } else {
+        promptAdminPassword();
+      }
+    }
+
     function promptAdminPassword() {
       document.getElementById('password-error').classList.add('hidden');
       document.getElementById('admin-password-input').value = '';
@@ -616,14 +648,24 @@ const SUPABASE_URL = "https://ninivwclnteokjeihevv.supabase.co";
       e.preventDefault();
       const inputPass = document.getElementById('admin-password-input').value;
       if (inputPass === ADMIN_PASSWORD) {
+        isAdminLoggedIn = true;
         closePasswordModal();
-        document.getElementById('admin-modal').classList.remove('hidden');
+        
+        const adminBtn = document.getElementById('admin-mode-btn');
+        adminBtn.innerText = "🔓 Keluar Admin Mode";
+        adminBtn.className = "bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1 font-bold shadow-sm";
+        
+        document.getElementById('add-announcement-btn').classList.remove('hidden');
+        fetchAnnouncements();
       } else {
         document.getElementById('password-error').classList.remove('hidden');
       }
     }
+
+    function openAdminModal() { document.getElementById('admin-modal').classList.remove('hidden'); }
     function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
 
+    // SAFE INSERT SUPABASE
     async function handleInsert(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('submit-btn');
@@ -635,7 +677,7 @@ const SUPABASE_URL = "https://ninivwclnteokjeihevv.supabase.co";
       const content = document.getElementById('input-content').value;
       const fileInput = document.getElementById('input-file');
       
-      let fileUrl = null;
+      const payload = { title, category, content };
 
       if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
@@ -658,18 +700,18 @@ const SUPABASE_URL = "https://ninivwclnteokjeihevv.supabase.co";
           .from('announcement-files')
           .getPublicUrl(fileName);
 
-        fileUrl = publicUrlData.publicUrl;
+        payload.file_url = publicUrlData.publicUrl;
       }
 
       const { error: insertError } = await supabaseClient
         .from('announcements')
-        .insert([{ title, category, content, file_url: fileUrl }]);
+        .insert([payload]);
 
       submitBtn.disabled = false;
       submitBtn.innerText = "Posting Pengumuman";
 
       if (insertError) {
-        alert('Gagal menambahkan pengumuman!');
+        alert('Gagal posting pengumuman: ' + insertError.message);
         console.error(insertError);
       } else {
         document.getElementById('add-form').reset();
